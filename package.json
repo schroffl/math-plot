@@ -1,0 +1,29 @@
+{
+  "name": "math-plot",
+  "version": "0.1.0",
+  "description": "A library for 2D plotting of functions via WebGL",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc --noEmit && node build.mjs",
+    "build:minify": "tsc --noEmit && node build.mjs --minify",
+    "serve": "node build.mjs --serve --watch",
+    "test": "ava src/*.spec.ts",
+    "test-watch": "npm run test -- --watch",
+    "check-format": "prettier src examples --check",
+    "format": "prettier src examples --write"
+  },
+  "author": "schroffl",
+  "license": "MIT",
+  "devDependencies": {
+    "@ava/typescript": "5.0.0",
+    "ava": "6.2.0",
+    "esbuild": "0.25.1",
+    "prettier": "3.5.3",
+    "typescript": "5.8.2"
+  },
+  "dependencies": {
+    "gl-matrix": "3.4.3",
+    "maquette": "4.1.2",
+    "regl": "2.1.1"
+  }
+}

@@ -1,0 +1,82 @@
+.math-plot-host {
+    position: relative;
+    display: block;
+    overflow: hidden;
+
+    --ui-padding: 16px;
+    --label-tick-spacing: 4px;
+
+    --text-background: #111;
+    --text-color: #dedede;
+
+    canvas {
+        width: 100%;
+        height: 100%;
+    }
+
+    .ui-layers {
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        top: 0px;
+        bottom: 0px;
+
+        padding: var(--ui-padding, 16px);
+
+        pointer-events: none;
+
+        > * {
+            pointer-events: all;
+        }
+
+        .top-left {
+            position: absolute;
+            left: var(--ui-padding);
+            top: var(--ui-padding);
+        }
+
+        .top-right {
+            position: absolute;
+            right: var(--ui-padding);
+            top: var(--ui-padding);
+        }
+
+        .bottom-left {
+            position: absolute;
+            left: var(--ui-padding);
+            bottom: var(--ui-padding);
+        }
+
+        .bottom-right {
+            position: absolute;
+            right: var(--ui-padding);
+            bottom: var(--ui-padding);
+        }
+
+        .mouse-position {
+            white-space: pre;
+            font-family: monospace;
+            color: var(--text-color, black);
+            background-color: var(--text-background, white);
+        }
+
+        .label {
+            position: absolute;
+            font-family: Arial;
+            font-size: 14px;
+            pointer-events: none;
+            color: var(--text-color, black);
+            background-color: var(--text-background, white);
+
+            &.label-y {
+                transform: translateX(-100%) translateY(-50%)
+                    translateX(calc(var(--label-tick-spacing, 4px) * -1));
+            }
+
+            &.label-x {
+                transform: translateX(-50%)
+                    translateY(var(--label-tick-spacing, 4px));
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Development Example</title>
+        <script>
+            new EventSource("/esbuild").addEventListener("change", () =>
+                location.reload(),
+            );
+        </script>
+        <link rel="stylesheet" href="./index.css" />
+    </head>
+    <body>
+        <div class="host-wrapper">
+            <div id="host"></div>
+        </div>
+        <script src="./index.js"></script>
+    </body>
+</html>

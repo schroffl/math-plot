@@ -28,7 +28,7 @@ export function generateStops(
     const subdivision = subdivisions[subdivision_idx];
 
     const inc = Math.pow(10, Math.floor(magnitude) - 1) * subdivision;
-    const start = from - (from % inc);
+    const start = from - (from % inc) - inc;
     const count = Math.ceil((to - start) / inc) + 1;
 
     // Allocate the required space up front

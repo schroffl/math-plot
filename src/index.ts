@@ -1,3 +1,8 @@
+/**
+ * @document ../docs/guides.md
+ * @module
+ */
+
 export * from './commands/circle';
 export * from './commands/instanced-rectangle';
 export * from './common';

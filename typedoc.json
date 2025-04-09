@@ -1,0 +1,12 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+
+    "out": "./build/docs",
+    "customCss": "./build/esbuild/docs/interactive-guides.css",
+    "customJs": "./build/esbuild/docs/interactive-guides.js",
+    "validation": {
+        "notExported": true,
+        "invalidLink": true,
+        "rewrittenLink": true
+    }
+}

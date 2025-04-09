@@ -2,9 +2,22 @@ import { Buffer, Regl } from 'regl';
 import { MathFunction } from './common';
 import { ColorCache } from './css-color-parser';
 
+/**
+ * A {@link RenderedMathFunction} contains the state needed to render a {@link MathFunction}.
+ * You are not supposed to manually create a {@link RenderedMathFunction}. This is done
+ * automatically by the {@link Plot}.
+ *
+ * @see {@link MathFunction}
+ * @internal
+ */
 export class RenderedMathFunction {
     public readonly buffer: Buffer;
     public cpu_buffer: Float32Array;
+
+    /**
+     * This cache only contains a single property that is the parsed value of the
+     * {@link MathFunction.color | color} property of the {@link func}.
+     */
     public color_cache: ColorCache<{ color: string }> = {};
 
     constructor(
@@ -21,6 +34,20 @@ export class RenderedMathFunction {
         });
     }
 
+    /**
+     * Samples the underlying function {@link func} in the given range and updates the
+     * {@link cpu_buffer} with the calculated (x, y) coordinates.
+     * The amount of samples is determined by the {@link MathFunction.num_samples | num_samples}
+     * property of the {@link func}.
+     * This function also ensures that the {@link cpu_buffer} is of correct length.
+     * So if {@link MathFunction.num_samples | num_samples} of the {@link func} changes the buffer
+     * is resized as required the next time {@link sample} is called.
+     *
+     * @param from Start sampling at this x value; `from < to`
+     * @param to Stop sampling at this x value; `from < to`
+     *
+     * @see {@link Plot.updateFunctions}
+     */
     sample(from: number, to: number): void {
         const num_samples = this.func.num_samples ?? 1000;
         const current_num_samples = this.cpu_buffer.length / 2;
@@ -44,10 +71,16 @@ export class RenderedMathFunction {
         }
     }
 
+    /**
+     * Transfers the contents of the {@link cpu_buffer} to GPU memory ({@link buffer}).
+     */
     updateGPUBuffer(): void {
         this.buffer(this.cpu_buffer);
     }
 
+    /**
+     * Destroy the GPU buffer.
+     */
     destroy(): void {
         this.cpu_buffer = this.cpu_buffer.slice(0, 0);
         this.buffer.destroy();

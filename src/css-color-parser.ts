@@ -1,9 +1,3 @@
-/**
- * I'm not really happy with the fact that color parsing depends on a Browser API. However, I also
- * feel like it would be rather hard to support all different ways of specifying colors in CSS via
- * manual parsing.
- */
-
 export type ParsedColor = [number, number, number, number];
 
 export type ColorCacheEntry = {
@@ -22,6 +16,16 @@ export type ColorCache<
           [key in keyof T]?: ColorCacheEntry;
       };
 
+/**
+ * A {@link CssColorParser} is able to convert CSS color definitions into RGBA.
+ * It uses a `<canvas>` element for this, so {@link parse} shouldn't be called in hot code paths.
+ * For this reason the {@link updateCache} function is provided, which takes an object of CSS color
+ * definitions and a {@link ColorCache} that is then updated as needed.
+ *
+ * @privateRemarks I'm not really happy with the fact that color parsing depends on a Browser API.
+ * However, I also feel like it would be rather hard to support all different ways of specifying
+ * colors in CSS via manual parsing.
+ */
 export class CssColorParser {
     public canvas: HTMLCanvasElement;
     public ctx: CanvasRenderingContext2D;

@@ -112,8 +112,6 @@ export class Plot {
 
     public fns: MathFunction[] = [];
 
-    private readonly cursor_buffer: Buffer;
-
     /** @internal */
     public readonly fn_cache: { [key: string]: RenderedMathFunction } = {};
 
@@ -166,11 +164,6 @@ export class Plot {
         this.circle = buildCircleCommand(this.regl);
         this.rectangleStrip = buildInstancedRectangleCommand(this.regl, 2);
         this.rectangles = buildInstancedRectangleCommand(this.regl, 4);
-
-        this.cursor_buffer = this.regl.buffer({
-            usage: 'static',
-            type: 'float32',
-        });
 
         this.axes_buffer = this.regl.buffer({
             usage: 'static',
@@ -608,17 +601,5 @@ export class Plot {
 
             this.line(fn.buffer, size, samples, parsed.color.value);
         }
-
-        this.cursor_buffer(this.cursor_position);
-
-        // Render the 'crosshair' where the user is pointing at
-        this.circle({
-            buffer: this.cursor_buffer,
-            size: vec2.fromValues(15, 15),
-            projection: this.projection_matrix,
-            view: this.view_matrix,
-            color: [1, 0, 0, 1],
-            instances: 1,
-        });
     }
 }

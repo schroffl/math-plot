@@ -12,17 +12,64 @@ import { UIRenderer } from './ui/ui';
 import { RenderedMathFunction } from './rendered-math-function';
 import { ColorCache, CssColorParser, ParsedColor } from './css-color-parser';
 
-// TODO Add options to enable/disable specific UI features
+/**
+ * @privateRemarks TODO: Make UI configurable
+ */
 export interface PlotOptions {
+    /**
+     * The initial view of the plot.
+     *
+     * @defaultValue {@link OriginView}
+     * @see {@link Plot.view}
+     * @see {@link Plot.setView}
+     */
     view?: View;
+
+    /**
+     * The initial colorscheme of the plot.
+     *
+     * @defaultValue {@link DefaultLightColors}
+     * @see {@link Plot.colorscheme}
+     */
     colorscheme?: Colorscheme;
+
     theme?: Theme;
+
+    /**
+     * A list of functions that are initially rendered. Defaults to an empty list.
+     *
+     * @defaultValue []
+     * @see {@link Plot.fns}
+     */
     fns?: MathFunction[];
+
+    /**
+     * A function that generates the grid lines to be rendered.
+     *
+     * @defaultValue {@link generateGrid}
+     * @see {@link GridFunction}
+     * @see {@link Plot.grid}
+     */
     grid?: GridFunction;
+
+    /**
+     * When updating the element matrix in {@link Plot.updateElementMatrix} take into consideration
+     * the [CSS `transform` property](https://developer.mozilla.org/en-US/docs/Web/CSS/transform) up
+     * until and including this element.
+     *
+     * @defaultValue {@link Plot.host}
+     * @see {@link Plot.updateElementMatrix}
+     * @see {@link Plot.css_transform_parent_limit}
+     * @see [The CSS `transform` property](https://developer.mozilla.org/en-US/docs/Web/CSS/transform)
+     */
     css_transform_parent_limit?: HTMLElement;
 }
 
 export type DragInfo = {
+    /**
+     * The [pointerId](https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId) of
+     * the pointer that started dragging.
+     */
     pointerId: number;
     position: vec2;
     view: View;
@@ -64,9 +111,12 @@ export class Plot {
     public inverse_canvas_element_matrix: mat4 = mat4.create();
 
     public fns: MathFunction[] = [];
-    private readonly fn_cache: { [key: string]: RenderedMathFunction } = {};
 
     private readonly cursor_buffer: Buffer;
+
+    /** @internal */
+    public readonly fn_cache: { [key: string]: RenderedMathFunction } = {};
+
     private readonly axes_buffer: Buffer;
     private readonly grid_buffer: Buffer;
     private readonly tick_buffer: Buffer;
@@ -75,14 +125,14 @@ export class Plot {
     public animation_frame_request?: number;
     public is_dirty: boolean = false;
 
-    public css_transform_parent_limit?: HTMLElement;
+    public css_transform_parent_limit: HTMLElement;
 
     constructor(
         public readonly host: HTMLElement,
         options?: PlotOptions,
     ) {
         this.grid = options?.grid ?? generateGrid;
-        this.css_transform_parent_limit = options?.css_transform_parent_limit;
+        this.css_transform_parent_limit = options?.css_transform_parent_limit ?? this.host;
         this.colorscheme = options?.colorscheme ?? DefaultLightColors;
         this.theme = options?.theme ?? {
             axis_width: 2,
@@ -255,11 +305,14 @@ export class Plot {
         this.setView(this.view);
     }
 
+    /**
+     * @see {@link Plot.css_transform_parent_limit}
+     */
     updateElementMatrix() {
         const host = this.host;
         const canvas = this.canvas;
 
-        const stop = this.css_transform_parent_limit ?? host;
+        const stop = this.css_transform_parent_limit;
         let elem: HTMLElement | null = host;
 
         const transform_matrix = mat4.create();
@@ -327,6 +380,10 @@ export class Plot {
         mat4.invert(this.inverse_view_matrix, this.view_matrix);
     }
 
+    /**
+     * @see {@link RenderedMathFunction.sample}
+     * @see {@link MathFunction.num_samples}
+     */
     updateFunctions(view: ViewRect): void {
         const from = view.x;
         const to = view.x + view.w;

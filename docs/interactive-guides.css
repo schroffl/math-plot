@@ -1,0 +1,13 @@
+@import '../src/index.css';
+
+.math-plot-host {
+    width: 100%;
+    aspect-ratio: 1.8;
+
+    border: 1px solid var(--color-accent);
+    border-radius: 8px;
+
+    .ui-layers, .ui-layers .label {
+        font-size: 12px !important;
+    }
+}

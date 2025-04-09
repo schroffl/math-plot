@@ -1,6 +1,25 @@
-export type ViewOriginKeywordX = 'left' | 'center' | 'right';
-export type ViewOriginKeywordY = 'top' | 'center' | 'bottom';
+/**
+ * This file contains everything related to the plot view, which is the area of the coordinate
+ * system that is rendered to the screen.
+ *
+ * @module
+ */
 
+/**
+ * The ViewOrigin determines where in the view the specified x and y coordinate should be placed. A
+ * value of 0.5 for x and y will put the "focus" point at the center of the view. Whereas setting
+ * both to 0 puts the point in the bottom left corner and a value of 1 puts it in the top right
+ * corner.
+ *
+ * You may also use {@link ViewOriginKeywordX} and {@link ViewOriginKeywordY} respectively.
+ *
+ * You may also specify the string `'center'` which horizontally and vertically centers the
+ * point in the view.
+ *
+ * @see {@link FixedView.origin}
+ * @see {@link FixedWidthView.origin}
+ * @see {@link FixedHeightView.origin}
+ */
 export type ViewOrigin =
     | {
           readonly x: number | ViewOriginKeywordX;
@@ -8,11 +27,37 @@ export type ViewOrigin =
       }
     | 'center';
 
+/**
+ * @see {@link ViewOrigin}
+ */
+export type ViewOriginKeywordX = 'left' | 'center' | 'right';
+
+/**
+ * @see {@link ViewOrigin}
+ */
+export type ViewOriginKeywordY = 'top' | 'center' | 'bottom';
+
+/**
+ * A simpler version of {@link ViewOrigin} without any helpful keywords.
+ * Both x and y are defined and numbers.
+ *
+ */
 export type ResolvedViewOrigin = {
     readonly x: number;
     readonly y: number;
 };
 
+/**
+ * A FixedView completely defines which area of the plane is visible. Both width and height are
+ * specified so if the aspect ratio of your view is not the same of the canvas you are projecting to
+ * you will experience stretching on one axis.
+ *
+ * @property x The x coordinate of the view
+ * @property y The y coordinate of the view
+ * @property w The width of the view
+ * @property h The height of the view
+ * @property origin Where (x, y) lies with respect to the view (see {@link ViewOrigin})
+ */
 export type FixedView = {
     readonly origin?: ViewOrigin;
     readonly x: number;
@@ -21,6 +66,15 @@ export type FixedView = {
     readonly h: number;
 };
 
+/**
+ * A FixedWidthView only specifies the origin and the width of the view. The height is calculated
+ * according to the aspect ratio of the projection. This means that neither axis is stretched.
+ *
+ * @property x The x coordinate of the view
+ * @property y The y coordinate of the view
+ * @property w The width of the view
+ * @property origin Where (x, y) lies with respect to the view (see {@link ViewOrigin})
+ */
 export type FixedWidthView = {
     readonly origin?: ViewOrigin;
     readonly x: number;
@@ -28,6 +82,15 @@ export type FixedWidthView = {
     readonly w: number;
 };
 
+/**
+ * A FixedWidthView only specifies the origin and the height of the view. The width is calculated
+ * according to the aspect ratio of the projection. This means that neither axis is stretched.
+ *
+ * @property x The x coordinate of the view
+ * @property y The y coordinate of the view
+ * @property h The height of the view
+ * @property origin Where (x, y) lies with respect to the view (see {@link ViewOrigin})
+ */
 export type FixedHeightView = {
     readonly origin?: ViewOrigin;
     readonly x: number;
@@ -35,10 +98,13 @@ export type FixedHeightView = {
     readonly h: number;
 };
 
+/**
+ * @see
+ */
 export type View = FixedView | FixedWidthView | FixedHeightView;
 
 /**
- * The origin (x, y) of the ViewRect is always in the bottom left.
+ * The origin (x, y) of the ViewRect is in the bottom left.
  */
 export type ViewRect = {
     readonly x: number;
@@ -47,6 +113,9 @@ export type ViewRect = {
     readonly h: number;
 };
 
+/**
+ * Converts the {@link ViewOrigin} keywords to actual numbers in the range of 0 to 1.
+ */
 export function resolveViewOrigin(origin: ViewOrigin): ResolvedViewOrigin {
     let x = 0;
     let y = 0;
@@ -78,6 +147,11 @@ export function resolveViewOrigin(origin: ViewOrigin): ResolvedViewOrigin {
     return { x, y };
 }
 
+/**
+ * Calculates a {@link ViewRect} from the given {@link View}. You need to specify the width and
+ * height of the projection in case the view is a {@link FixedWidthView} or {@link FixedHeightView}
+ * and either width or height need to be calculated dynamically.
+ */
 export function getViewRect(view: View, width: number, height: number): ViewRect {
     let w = 0;
     let h = 0;
@@ -109,6 +183,9 @@ export function getViewRect(view: View, width: number, height: number): ViewRect
     return { x, y, w, h };
 }
 
+/**
+ * Translates the given view by the given amount along the x and y axis respectively.
+ */
 export function translateView(view: View, x: number, y: number): View {
     return Object.assign({}, view, {
         x: view.x + x,
@@ -116,6 +193,14 @@ export function translateView(view: View, x: number, y: number): View {
     });
 }
 
+/**
+ * Scales the given view by the given amount about the {@link ViewOrigin} of the View.
+ *
+ * @param view The view you want to scale
+ * @param scale_x The amount to scale the x axis by
+ * @param scale_y The amount to scale the y axis by. If this is not defined, scale_x is also used
+ *                for the y axis, preserving the aspect ratio of the view.
+ */
 export function scaleView(view: View, scale_x: number, scale_y?: number): View {
     const sx = scale_x;
     const sy = scale_y ?? sx;
@@ -140,6 +225,11 @@ export function scaleView(view: View, scale_x: number, scale_y?: number): View {
     }
 }
 
+/**
+ * Generate a {@link FixedView} from the given bounds, where
+ * - left ≤ x ≤ right
+ * - bottom ≤ y ≤ top
+ */
 export function viewFromBounds(
     left: number,
     right: number,

@@ -116,21 +116,23 @@ export function translateView(view: View, x: number, y: number): View {
     });
 }
 
-export function scaleView(view: View, scale: number): View {
+export function scaleView(view: View, scale_x: number, scale_y?: number): View {
+    const sx = scale_x;
+    const sy = scale_y ?? sx;
     const { x, y } = view;
     const resolved_origin = view.origin ? resolveViewOrigin(view.origin) : { x: 0, y: 0 };
 
     if ('w' in view && 'h' in view) {
-        const new_view = { x, y, w: view.w * scale, h: view.h * scale, origin: view.origin };
+        const new_view = { x, y, w: view.w * sx, h: view.h * sy, origin: view.origin };
         new_view.x -= new_view.w * resolved_origin.x;
         new_view.y -= new_view.w * resolved_origin.y;
         return new_view;
     } else if ('w' in view) {
-        const new_view = { x, y, w: view.w * scale, origin: view.origin };
+        const new_view = { x, y, w: view.w * sx, origin: view.origin };
         new_view.x -= view.w * new_view.w * resolved_origin.x;
         return new_view;
     } else if ('h' in view) {
-        const new_view = { x, y, h: view.h * scale, origin: view.origin };
+        const new_view = { x, y, h: view.h * sy, origin: view.origin };
         new_view.y -= view.h * new_view.h * resolved_origin.y;
         return new_view;
     } else {

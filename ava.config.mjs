@@ -1,7 +1,7 @@
 export default {
     typescript: {
         rewritePaths: {
-            'src/': 'build/src/',
+            'src/': 'build/tsc/src/',
         },
         compile: 'tsc',
     },

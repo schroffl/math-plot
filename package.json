@@ -1,5 +1,5 @@
 {
-  "name": "math-plot",
+  "name": "@schroffl/plot",
   "version": "0.1.0",
   "description": "A library for 2D plotting of functions via WebGL",
   "main": "src/index.ts",

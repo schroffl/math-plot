@@ -9,9 +9,9 @@ const minify = args.includes('--minify');
 const create_metafile = args.includes('--metafile');
 
 const ctx = await esbuild.context({
-    entryPoints: ['./src/index.ts', './examples/**/*'],
+    entryPoints: ['./src/index.ts', './examples/**/*', './docs/interactive-guides.*'],
     bundle: true,
-    outdir: './dist',
+    outdir: './build/esbuild',
     minify: minify,
     metafile: create_metafile,
     sourcemap: true,

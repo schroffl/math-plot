@@ -2,9 +2,14 @@
   "name": "@schroffl/plot",
   "version": "0.1.0",
   "description": "A library for 2D plotting of functions via WebGL",
+  "homepage": "https://github.com/schroffl/math-plot#readme",
+  "bugs": {
+    "url": "https://github.com/schroffl/math-plot/issues"
+  },
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc --noEmit && node build.mjs",
+    "build:docs": "typedoc",
     "build:minify": "tsc --noEmit && node build.mjs --minify",
     "serve": "node build.mjs --serve --watch",
     "test": "ava src/*.spec.ts",
@@ -19,6 +24,7 @@
     "ava": "6.2.0",
     "esbuild": "0.25.1",
     "prettier": "3.5.3",
+    "typedoc": "0.28.2",
     "typescript": "5.8.2"
   },
   "dependencies": {

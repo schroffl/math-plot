@@ -1,7 +1,7 @@
 import createREGL, { Buffer, Regl } from 'regl';
 import { Colorscheme, DefaultLightColors, MathFunction, randomID, Theme } from './common';
 import { generateGrid, GridFunction } from './grid';
-import { getViewRect, OriginView, scaleView, translateView, View, ViewRect } from './view';
+import { getViewRect, OriginView, View, ViewRect, viewRectToMatrix } from './view';
 import { buildCircleCommand, CircleCommand } from './commands/circle';
 import { mat4, vec2 } from 'gl-matrix';
 import {
@@ -11,6 +11,7 @@ import {
 import { UIRenderer } from './ui/ui';
 import { RenderedMathFunction } from './rendered-math-function';
 import { ColorCache, CssColorParser, ParsedColor } from './css-color-parser';
+import { PlotInteraction } from './plot-interaction';
 
 /**
  * @privateRemarks TODO: Make UI configurable
@@ -65,17 +66,6 @@ export interface PlotOptions {
     css_transform_parent_limit?: HTMLElement;
 }
 
-export type DragInfo = {
-    /**
-     * The [pointerId](https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId) of
-     * the pointer that started dragging.
-     */
-    pointerId: number;
-    position: vec2;
-    view: View;
-    matrix: mat4;
-};
-
 export class Plot {
     public readonly canvas: HTMLCanvasElement;
     public readonly ui_layers: HTMLDivElement;
@@ -99,11 +89,7 @@ export class Plot {
 
     public color_cache: ColorCache<Colorscheme> = {};
 
-    public drag_info?: DragInfo;
-
     private view_rect!: ViewRect;
-
-    private cursor_position: vec2 = vec2.fromValues(0, 0);
 
     public host_element_matrix: mat4 = mat4.create();
     public canvas_element_matrix: mat4 = mat4.create();
@@ -124,6 +110,8 @@ export class Plot {
     public is_dirty: boolean = false;
 
     public css_transform_parent_limit: HTMLElement;
+
+    public interaction: PlotInteraction;
 
     constructor(
         public readonly host: HTMLElement,
@@ -193,98 +181,26 @@ export class Plot {
             obs.observe(canvas);
         }
 
-        this.setupEventListeners(this.host);
+        this.interaction = new PlotInteraction(
+            this.canvas,
+            () => {
+                return {
+                    view: this.view,
+                    host_element_matrix: this.host_element_matrix,
+                    inverse_view_matrix: this.inverse_view_matrix,
+                    projection_matrix: this.projection_matrix,
+                };
+            },
+            (new_view) => {
+                this.setView(new_view);
+            },
+            (view) => {
+                const rect = getViewRect(view, gl.drawingBufferWidth, gl.drawingBufferHeight);
+                return viewRectToMatrix(rect);
+            },
+        );
+
         this.markDirty();
-    }
-
-    setupEventListeners(target: HTMLElement) {
-        target.addEventListener('pointermove', (e) => {
-            const pos = vec2.fromValues(e.pageX, e.pageY);
-
-            vec2.transformMat4(this.cursor_position, pos, this.host_element_matrix);
-            vec2.transformMat4(
-                this.cursor_position,
-                this.cursor_position,
-                this.inverse_view_matrix,
-            );
-
-            this.updateUIState();
-        });
-
-        target.addEventListener('pointerdown', (e) => {
-            if (this.drag_info) {
-                return;
-            }
-
-            const pos = vec2.fromValues(e.pageX, e.pageY);
-            vec2.transformMat4(pos, pos, this.host_element_matrix);
-            vec2.transformMat4(pos, pos, this.inverse_view_matrix);
-
-            target.setPointerCapture(e.pointerId);
-
-            this.drag_info = {
-                pointerId: e.pointerId,
-                position: pos,
-                view: Object.assign({}, this.view),
-                matrix: mat4.copy(mat4.create(), this.inverse_view_matrix),
-            };
-        });
-
-        target.addEventListener('pointermove', (e) => {
-            if (e.pointerId != this.drag_info?.pointerId) {
-                return;
-            }
-
-            const old_pos = this.drag_info.position;
-            const pos = vec2.fromValues(e.pageX, e.pageY);
-
-            vec2.transformMat4(pos, pos, this.host_element_matrix);
-            vec2.transformMat4(pos, pos, this.drag_info.matrix);
-
-            const diff = vec2.subtract(vec2.create(), old_pos, pos);
-            const new_view = translateView(this.drag_info.view, diff[0], diff[1]);
-
-            this.setView(new_view);
-        });
-
-        target.addEventListener('pointerup', (e) => {
-            if (e.pointerId === this.drag_info?.pointerId) {
-                this.drag_info = undefined;
-            }
-        });
-
-        // FIXME Currently this code relies on call setView 2 times, but that does a lot of
-        //       unnecessary work like calculating the function values.
-        target.addEventListener('wheel', (e) => {
-            e.preventDefault();
-
-            const pos = vec2.fromValues(e.pageX, e.pageY);
-            vec2.transformMat4(pos, pos, this.host_element_matrix);
-            vec2.transformMat4(pos, pos, this.inverse_view_matrix);
-
-            // TODO Find out if this works from a UX perspective on different machines. Scrolling
-            //      mechanics are a little finicky.
-            const scale = 1 + 0.1 * Math.sign(e.deltaY);
-            const scaled_view = scaleView(this.view, scale);
-
-            this.setView(scaled_view);
-
-            const new_pos = vec2.fromValues(e.pageX, e.pageY);
-            vec2.transformMat4(new_pos, new_pos, this.host_element_matrix);
-            vec2.transformMat4(new_pos, new_pos, this.inverse_view_matrix);
-
-            const diff = vec2.subtract(vec2.create(), pos, new_pos);
-
-            const final_view = translateView(this.view, diff[0], diff[1]);
-
-            this.setView(final_view);
-
-            // TODO Make zooming while dragging work.
-            if (this.drag_info) {
-                target.releasePointerCapture(this.drag_info.pointerId);
-                this.drag_info = undefined;
-            }
-        });
     }
 
     updateCanvasSize() {
@@ -368,7 +284,7 @@ export class Plot {
 
         mat4.ortho(this.projection_matrix, -w / 2, w / 2, -h / 2, h / 2, 0, 1);
 
-        mat4.ortho(this.view_matrix, view.x, view.x + view.w, view.y, view.y + view.h, -1, 1);
+        viewRectToMatrix(view, this.view_matrix);
 
         mat4.invert(this.inverse_view_matrix, this.view_matrix);
     }
@@ -478,10 +394,6 @@ export class Plot {
 
         this.ui.update({
             plot: this,
-            mouse: {
-                x: this.cursor_position[0],
-                y: this.cursor_position[1],
-            },
             labels: [
                 ...grid.x
                     .filter((x) => x !== 0)

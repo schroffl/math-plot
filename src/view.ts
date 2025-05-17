@@ -5,6 +5,8 @@
  * @module
  */
 
+import { mat4 } from 'gl-matrix';
+
 /**
  * The ViewOrigin determines where in the view the specified x and y coordinate should be placed. A
  * value of 0.5 for x and y will put the "focus" point at the center of the view. Whereas setting
@@ -255,3 +257,14 @@ export const OriginView: View = {
     w: 2,
     origin: 'center',
 };
+
+/**
+ * Convert the given view into a 4x4 matrix.
+ *
+ * @param out Write the result into this pre-allocated matrix.
+ */
+export function viewRectToMatrix(view: ViewRect, out?: mat4): mat4 {
+    const output = out ?? mat4.create();
+    mat4.ortho(output, view.x, view.x + view.w, view.y, view.y + view.h, -1, 1);
+    return output;
+}

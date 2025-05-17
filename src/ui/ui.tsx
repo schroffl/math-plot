@@ -42,26 +42,8 @@ const UI = (state: UIState) => {
             <div class="tick-labels" key="tick-labels">
                 {...labels}
             </div>
-            <MousePosition mouse={state.mouse}></MousePosition>
         </div>
     );
-};
-
-const MousePosition = (props: { mouse: UIState['mouse'] }) => {
-    let x_str = props.mouse.x.toFixed(30);
-    let y_str = props.mouse.y.toFixed(30);
-
-    const dot_diff = x_str.indexOf('.') - y_str.indexOf('.');
-
-    if (dot_diff > 0) {
-        y_str = ' '.repeat(dot_diff) + y_str;
-    } else if (dot_diff < 0) {
-        x_str = ' '.repeat(-dot_diff) + x_str;
-    }
-
-    const str = `${x_str}\n${y_str}`;
-
-    return <div class="mouse-position bottom-left">{str}</div>;
 };
 
 export type LabelInfo = {
@@ -73,7 +55,6 @@ export type LabelInfo = {
 
 export type UIState = {
     plot: Plot;
-    mouse: { x: number; y: number };
     labels: LabelInfo[];
 };
 
